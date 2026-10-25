@@ -15,13 +15,15 @@
   let loaded = $state(false);
   let failed = $state(false);
 
-  const label = $derived(
+  const action = $derived(
     entry.section === "shorts"
       ? "Abrir short en YouTube"
       : entry.section === "streams"
         ? "Abrir directo en YouTube"
         : "Abrir video en YouTube",
   );
+  // Con título: el lector de pantalla dice cuál es, y el cursor lo muestra como tooltip.
+  const label = $derived(entry.title ? `${entry.title}. ${action}` : action);
 
   // Preview al pasar el cursor: webp animado (videos/streams) o frames alternados (shorts).
   // Solo se muestra si el recurso cargó y pasó la validación; si falla, queda la miniatura.
@@ -65,6 +67,7 @@
   target="_blank"
   rel="noopener noreferrer"
   aria-label={label}
+  title={entry.title || undefined}
   onclick={onClick}
   onpointerenter={onEnter}
   onpointerleave={() => hover.stop()}

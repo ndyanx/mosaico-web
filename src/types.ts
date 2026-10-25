@@ -29,6 +29,8 @@ export interface Thumbnail extends ImageSource {
 export interface ChannelItem {
   id: string;
   url: string;
+  /** Título del video ("" si el backend no pudo leerlo). Ausente en backends anteriores a este campo. */
+  title?: string;
   thumbnails: Thumbnail[];
   /** Miniatura base de la card (la mayor entre las originales). null = sin miniatura conocida. */
   cover: ImageSource | null;
@@ -88,6 +90,8 @@ export interface ListQuery {
 export interface ChannelEntry extends MediaEntry {
   /** Enlace al video/short/stream (se abre en pestaña nueva). */
   url: string;
+  /** Título para mostrar y buscar ("" = desconocido). */
+  title: string;
   section: Section;
   /** Miniatura base de la card. null = sin miniatura (placeholder). */
   coverUrl: string | null;

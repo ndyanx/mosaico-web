@@ -12,7 +12,7 @@ import {
 import type { ChannelEntry } from "../src/types.ts";
 
 const entry = (over: Partial<ChannelEntry> = {}): ChannelEntry => ({
-  id: "s1", url: "u", section: "shorts", width: 405, height: 720,
+  id: "s1", url: "u", title: "", section: "shorts", width: 405, height: 720,
   coverUrl: "c", frames: ["c", "f1", "f2", "f3"], animatedUrl: null, ...over,
 });
 const ok = (w = 405): ImageProbe => async () => ({ width: w, height: w * 1.8 });

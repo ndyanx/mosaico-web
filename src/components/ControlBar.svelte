@@ -18,8 +18,23 @@
     /** Reproducir en un modal (true) o abrir YouTube en otra pestaña (false). */
     embed: boolean;
     onEmbed: (v: boolean) => void;
+    /** Búsqueda por título vigente (se aplica en el navegador, sin pedir nada a la API). */
+    titleFilter: string;
+    onTitleFilter: (v: string) => void;
   }
-  let { query, onChange, summary = "", maxCols, onMaxCols, theme, onTheme, embed, onEmbed }: Props = $props();
+  let {
+    query,
+    onChange,
+    summary = "",
+    maxCols,
+    onMaxCols,
+    theme,
+    onTheme,
+    embed,
+    onEmbed,
+    titleFilter,
+    onTitleFilter,
+  }: Props = $props();
 
   const SECTION_LABEL: Record<Section, string> = { videos: "Videos", shorts: "Shorts", streams: "Directos" };
   const SORT_LABEL: Record<SortBy, string> = { newest: "Más nuevos", popular: "Populares", oldest: "Más antiguos" };
@@ -44,6 +59,28 @@
   function clearChannel(): void {
     draft = "";
     input?.focus();
+  }
+
+  // Título: se filtra mientras escribes, con una pausa corta para no re-maquetar en cada tecla.
+  // Se resincroniza si la URL cambia (atrás/adelante) o si cambiar de canal lo vacía.
+  const TITLE_DEBOUNCE_MS = 200;
+  let titleDraft = $state("");
+  let titleInput = $state<HTMLInputElement | null>(null);
+  let titleTimer: ReturnType<typeof setTimeout> | undefined;
+  $effect(() => {
+    titleDraft = titleFilter;
+  });
+  $effect(() => () => clearTimeout(titleTimer));
+
+  function onTitleInput(): void {
+    clearTimeout(titleTimer);
+    titleTimer = setTimeout(() => onTitleFilter(titleDraft.trim()), TITLE_DEBOUNCE_MS);
+  }
+  function clearTitle(): void {
+    clearTimeout(titleTimer);
+    titleDraft = "";
+    onTitleFilter("");
+    titleInput?.focus();
   }
 </script>
 
@@ -75,6 +112,42 @@
     />
     {#if draft}
       <button type="button" class="clear" aria-label="Borrar canal" onclick={clearChannel}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+      </button>
+    {/if}
+  </form>
+
+  <form
+    class="search title"
+    role="search"
+    onsubmit={(e) => {
+      e.preventDefault();
+      clearTimeout(titleTimer);
+      onTitleFilter(titleDraft.trim());
+    }}
+  >
+    <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7V5h16v2M12 5v14M9 19h6" /></svg>
+    <input
+      bind:this={titleInput}
+      type="text"
+      name="title"
+      aria-label="Buscar por título"
+      bind:value={titleDraft}
+      oninput={onTitleInput}
+      onkeydown={(e) => {
+        if (e.key === "Escape" && titleDraft) {
+          e.preventDefault();
+          clearTitle();
+        }
+      }}
+      disabled={!query.channel}
+      placeholder="Buscar por título…"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+    />
+    {#if titleDraft}
+      <button type="button" class="clear" aria-label="Borrar búsqueda por título" onclick={clearTitle}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
       </button>
     {/if}
@@ -200,6 +273,13 @@
   }
   .search input::placeholder {
     color: var(--text-3);
+  }
+  .search input:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+  .search.title {
+    flex-basis: 260px;
   }
   .search input:hover {
     background: var(--surface-3);
@@ -402,6 +482,10 @@
       flex: 1 1 0;
       min-width: 0;
     }
+    .search.title {
+      order: 3;
+      flex: 1 1 100%;
+    }
     .tools {
       order: 2;
       margin-left: 0;
@@ -410,14 +494,14 @@
       display: none;
     }
     .seg {
-      order: 3;
+      order: 4;
       flex: 1 1 100%;
     }
     .seg button {
       flex: 1;
     }
     .filters {
-      order: 4;
+      order: 5;
       flex: 1 1 100%;
     }
     .pill {

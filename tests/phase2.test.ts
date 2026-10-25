@@ -11,6 +11,7 @@ import type { ChannelItem, ListQuery } from "../src/types.ts";
 const item = (over: Partial<ChannelItem> = {}): ChannelItem => ({
   id: "abc",
   url: "https://www.youtube.com/shorts/abc",
+  title: "Mi short",
   thumbnails: [],
   cover: { url: "https://i.ytimg.com/vi/abc/oar3.jpg", width: 405, height: 720 },
   frames: ["https://x/oar3.jpg", "https://x/oardefault.jpg", "https://x/oar1.jpg", "https://x/oar2.jpg"],

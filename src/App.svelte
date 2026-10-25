@@ -5,7 +5,8 @@
   import { canEmbed } from "./lib/embed.ts";
   import ControlBar from "./components/ControlBar.svelte";
   import { createChannelList, type ListState } from "./lib/channelList.ts";
-  import { normalizeQuery, parseListQuery, sameQuery, toSearch } from "./lib/urlState.ts";
+  import { normalizeQuery, parseListQuery, parseTitleFilter, sameQuery, toSearch } from "./lib/urlState.ts";
+  import { filterByTitle, titleTerms } from "./lib/titleSearch.ts";
   import { columnsFor } from "./lib/layout.ts";
   import { titleFor } from "./lib/site.ts";
   import { applyTheme, clampCols, loadPrefs, nextTheme, savePrefs, type Theme } from "./lib/prefs.ts";
@@ -13,6 +14,8 @@
 
   // La consulta vive en la URL (?channel=@handle&section=shorts&sort_by=&members=) y la edita la ControlBar.
   let query = $state<ListQuery>(parseListQuery(location.search));
+  // Búsqueda por título (?q=): se filtra en el navegador sobre lo ya descargado, sin reiniciar la lista.
+  let titleFilter = $state(parseTitleFilter(location.search));
 
   // Preferencias de vista (no van en la URL): tema y máximo de columnas.
   const initial = loadPrefs();
@@ -42,9 +45,19 @@
   function applyQuery(next: ListQuery): void {
     const q = normalizeQuery(next);
     if (sameQuery(q, query)) return;
+    // Otro canal = otros títulos: la búsqueda no se arrastra. Sección/orden/miembros sí la conservan.
+    if (q.channel !== query.channel) titleFilter = "";
     query = q;
     playing = null;
-    history.pushState(null, "", `${location.pathname}${toSearch(q)}${location.hash}`);
+    history.pushState(null, "", `${location.pathname}${toSearch(q, titleFilter)}${location.hash}`);
+  }
+
+  // Escribir en el buscador de títulos no crea historial (una entrada por tecla sería inmanejable).
+  function setTitleFilter(v: string): void {
+    const f = v.trim();
+    if (f === titleFilter) return;
+    titleFilter = f;
+    history.replaceState(null, "", `${location.pathname}${toSearch(query, f)}${location.hash}`);
   }
 
   function onPopState(): void {
@@ -53,6 +66,7 @@
       query = q;
       playing = null;
     }
+    titleFilter = parseTitleFilter(location.search);
   }
 
   let list = $state.raw<ListState>({
@@ -78,8 +92,47 @@
   $effect(() => () => loader.dispose());
 
   const empty = $derived(list.phase === "ready" && list.entries.length === 0 && !list.hasMore);
+
+  // Filtro por título sobre lo descargado. Sin búsqueda es la misma lista (misma referencia).
+  const filtering = $derived(titleTerms(titleFilter).length > 0);
+  const shown = $derived(filterByTitle(list.entries, titleFilter));
+
+  // Con búsqueda activa hay que revisar TODO el canal, no solo lo que ya se ve: se siguen pidiendo
+  // páginas hasta el final (loadMore ya ignora llamadas repetidas, errores y listas sin más páginas).
+  $effect(() => {
+    if (filtering && list.phase === "ready" && list.hasMore && !list.loadingMore && !list.moreError) {
+      untrack(() => loader.loadMore());
+    }
+  });
+
+  // El grid reconstruye todo cuando cambia `generation`; dentro de una misma generación solo puede
+  // CRECER por el final. Eso se cumple al llegar páginas nuevas, pero no al cambiar el texto de la
+  // búsqueda: ahí hace falta una generación nueva.
+  let genSeq = 0;
+  let genKey = "";
+  let genVal = 0;
+  const gridGeneration = $derived.by(() => {
+    const key = `${list.generation}|${titleTerms(titleFilter).join(" ")}`;
+    if (key !== genKey) {
+      genKey = key;
+      genVal = ++genSeq;
+    }
+    return genVal;
+  });
+
+  const noMatches = $derived(
+    filtering && list.phase === "ready" && !list.hasMore && list.entries.length > 0 && shown.length === 0,
+  );
+  const noTitles = $derived(list.entries.length > 0 && list.entries.every((e) => !e.title));
+
   const counter = $derived(
-    list.total !== null ? `${list.entries.length} de ${list.total}` : `${list.entries.length}`,
+    filtering
+      ? list.total !== null
+        ? `${shown.length} coinciden de ${list.total}`
+        : `${shown.length} coinciden`
+      : list.total !== null
+        ? `${list.entries.length} de ${list.total}`
+        : `${list.entries.length}`,
   );
 
   // El skeleton usa las mismas columnas que tendrá el grid (mismo padding horizontal: 40px).
@@ -103,6 +156,8 @@
     onTheme={() => (theme = nextTheme(theme))}
     {embed}
     onEmbed={(v) => (embed = v)}
+    {titleFilter}
+    onTitleFilter={setTitleFilter}
   />
 
   {#if list.stale}
@@ -113,17 +168,22 @@
   {/if}
 
   <main class="stage">
-    <MasonryGrid entries={list.entries} generation={list.generation} maxColumns={maxCols} onNearEnd={() => loader.loadMore()} onOpen={embedOn ? openPlayer : undefined}>
+    <MasonryGrid entries={shown} generation={gridGeneration} maxColumns={maxCols} onNearEnd={() => loader.loadMore()} onOpen={embedOn ? openPlayer : undefined}>
       {#snippet footer()}
         {#if list.phase === "ready"}
           <div class="footer" aria-live="polite">
             {#if list.moreError}
               <span class="err">No se pudo cargar más: {list.moreError.message}</span>
               <button type="button" class="btn" onclick={() => loader.retry()}>Reintentar</button>
-            {:else if list.loadingMore}
-              <span class="chip"><span class="spinner" aria-hidden="true"></span> Cargando más…</span>
+            {:else if list.loadingMore || (filtering && list.hasMore)}
+              <span class="chip">
+                <span class="spinner" aria-hidden="true"></span>
+                {filtering ? `Buscando en el canal… ${list.entries.length} revisados` : "Cargando más…"}
+              </span>
             {:else if !list.hasMore && list.entries.length > 0}
-              <span class="chip end">Fin · {list.entries.length} items</span>
+              <span class="chip end">
+                {filtering ? `Fin · ${shown.length} de ${list.entries.length} coinciden` : `Fin · ${list.entries.length} items`}
+              </span>
             {/if}
           </div>
         {/if}
@@ -165,6 +225,17 @@
           </ul>
         {/if}
         <button type="button" class="btn primary" onclick={() => loader.retry()}>Reintentar</button>
+      </div>
+    {:else if noMatches}
+      <div class="state">
+        <div class="badge" aria-hidden="true">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5M8.5 8.5l5 5M13.5 8.5l-5 5" /></svg>
+        </div>
+        <h2>Sin coincidencias</h2>
+        <p>Ningún título de este canal contiene «{titleFilter}».</p>
+        {#if noTitles}
+          <p>El servidor no devolvió títulos: ¿el backend está sin actualizar?</p>
+        {/if}
       </div>
     {:else if empty}
       <div class="state">

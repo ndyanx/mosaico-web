@@ -2,6 +2,7 @@
 // Fase 4: lectura y escritura. La ControlBar edita la consulta y App la sincroniza con el historial.
 import { MEMBERS, SECTIONS, SORTS } from "../types.ts";
 import type { ListQuery, Section } from "../types.ts";
+import { MAX_FILTER_LENGTH } from "./titleSearch.ts";
 
 export const DEFAULT_QUERY: ListQuery = {
   channel: "",
@@ -53,16 +54,27 @@ export function parseListQuery(search: string): ListQuery {
 }
 
 /**
+ * Búsqueda por título (`?q=`). No es parte de la consulta a la API: se filtra en el
+ * navegador, así que cambiarla no reinicia la lista.
+ */
+export function parseTitleFilter(search: string): string {
+  return (new URLSearchParams(search).get("q") ?? "").trim().slice(0, MAX_FILTER_LENGTH);
+}
+
+/**
  * Serializa la consulta: omite lo que vale el default (URLs cortas) y devuelve
  * "" o "?...". Es la inversa de parseListQuery: parse(toSearch(q)) equivale a normalizeQuery(q).
+ * `titleFilter` (opcional) se añade como `q`.
  */
-export function toSearch(query: ListQuery): string {
+export function toSearch(query: ListQuery, titleFilter = ""): string {
   const q = normalizeQuery(query);
   const p = new URLSearchParams();
   if (q.channel) p.set("channel", q.channel);
   if (q.section !== DEFAULT_QUERY.section) p.set("section", q.section);
   if (q.sort_by !== DEFAULT_QUERY.sort_by) p.set("sort_by", q.sort_by);
   if (q.members !== DEFAULT_QUERY.members) p.set("members", q.members);
+  const f = titleFilter.trim().slice(0, MAX_FILTER_LENGTH);
+  if (f) p.set("q", f);
   const s = p.toString();
   return s ? `?${s}` : "";
 }

@@ -37,6 +37,7 @@ export function toEntry(item: ChannelItem, section: Section): ChannelEntry {
   return {
     id: item.id,
     url: item.url,
+    title: typeof item.title === "string" ? item.title.trim() : "",
     section,
     width: sized ? cover!.width! : 0,
     height: sized ? cover!.height! : 0,

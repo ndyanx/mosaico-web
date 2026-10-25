@@ -17,6 +17,19 @@ En desarrollo el frontend llama a `/api/...` y el proxy de Vite reenvía al back
 (`BACKEND_URL=http://127.0.0.1:4000 pnpm dev` para otro destino). Sin backend real, usa
 `tools/dev-fake.ts` (instrucciones dentro del archivo).
 
+## Búsqueda por título
+
+La barra tiene un segundo campo, «Buscar por título…», que filtra en el navegador (sin pedir nada
+nuevo a la API) sobre los títulos que manda el backend en cada item (`title`).
+
+- Sin mayúsculas ni tildes; con varias palabras deben aparecer **todas**, en cualquier orden.
+- Mientras hay búsqueda, la app sigue pidiendo páginas hasta el final del canal, para que el
+  resultado cubra todo el canal y no solo lo que ya se había cargado (puede tardar en canales grandes).
+- Se guarda en la URL como `?q=` (compartible). Cambiar de canal la borra; cambiar sección, orden o
+  miembros la conserva. `Esc` la limpia.
+- Si el backend aún no manda `title`, la búsqueda no encuentra nada y la pantalla lo avisa.
+- Lógica en `src/lib/titleSearch.ts`; pruebas en `tests/titleSearch.test.ts`.
+
 ## Desplegar en Cloudflare Pages
 
 En producción **no hay proxy**: el navegador llama directo al backend de Render, así que se
