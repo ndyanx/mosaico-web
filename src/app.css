@@ -1,0 +1,151 @@
+/* Tokens. Claro por defecto; oscuro si el sistema lo pide o si data-theme="dark".
+   data-theme="light"/"dark" (elección del usuario) gana sobre el sistema. */
+:root {
+  color-scheme: light;
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #eceef2;
+  --surface-3: #e2e5ea;
+  --border: #dfe2e8;
+  --ring: rgb(15 23 42 / 0.08);
+  --text: #14171c;
+  --text-2: #4a5160;
+  --text-3: #7a8191;
+  --accent: #2f6bff;
+  --accent-soft: rgb(47 107 255 / 0.12);
+  --on-accent: #ffffff;
+  --danger: #d23b3b;
+  --warn-bg: #fff6dd;
+  --warn-border: #f0dca0;
+  --warn-text: #6b5210;
+  --shadow: 0 1px 2px rgb(15 23 42 / 0.06), 0 4px 14px rgb(15 23 42 / 0.06);
+  --shadow-lift: 0 6px 24px rgb(15 23 42 / 0.16);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0c0d10;
+  --surface: #15171c;
+  --surface-2: #1d2027;
+  --surface-3: #272b34;
+  --border: #272b34;
+  --ring: rgb(255 255 255 / 0.07);
+  --text: #eceef2;
+  --text-2: #a4abb8;
+  --text-3: #6f7685;
+  --accent: #7aa7ff;
+  --accent-soft: rgb(122 167 255 / 0.16);
+  --on-accent: #0b1020;
+  --danger: #f27b7b;
+  --warn-bg: #2a2412;
+  --warn-border: #4a3f1a;
+  --warn-text: #f0d98a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
+  --shadow-lift: 0 8px 28px rgb(0 0 0 / 0.55);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0c0d10;
+    --surface: #15171c;
+    --surface-2: #1d2027;
+    --surface-3: #272b34;
+    --border: #272b34;
+    --ring: rgb(255 255 255 / 0.07);
+    --text: #eceef2;
+    --text-2: #a4abb8;
+    --text-3: #6f7685;
+    --accent: #7aa7ff;
+    --accent-soft: rgb(122 167 255 / 0.16);
+    --on-accent: #0b1020;
+    --danger: #f27b7b;
+    --warn-bg: #2a2412;
+    --warn-border: #4a3f1a;
+    --warn-text: #f0d98a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 4px 14px rgb(0 0 0 / 0.3);
+    --shadow-lift: 0 8px 28px rgb(0 0 0 / 0.55);
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+::selection {
+  background: var(--accent-soft);
+}
+
+/* Botones compartidos */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn:hover {
+  background: var(--surface-2);
+}
+.btn.primary {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--on-accent);
+}
+.btn.primary:hover {
+  filter: brightness(1.08);
+}
+.btn:focus-visible,
+.icon-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-2);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.icon-btn:hover:not(:disabled) {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
