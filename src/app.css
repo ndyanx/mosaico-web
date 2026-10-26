@@ -82,6 +82,12 @@ body,
   height: 100%;
   margin: 0;
 }
+/* Red de seguridad: si algún día algo se desborda en horizontal, el navegador móvil no aleja el zoom
+   (que dejaba una franja vacía abajo); lo desbordado se recorta en vez de ensanchar la página. */
+html,
+body {
+  overflow-x: hidden;
+}
 body {
   background: var(--bg);
   color: var(--text);

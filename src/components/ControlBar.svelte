@@ -336,6 +336,7 @@
   .filters {
     display: flex;
     gap: 8px;
+    min-width: 0;
   }
   .pill {
     position: relative;
@@ -343,6 +344,7 @@
     align-items: center;
     gap: 6px;
     height: 36px;
+    min-width: 0;
     padding: 0 28px 0 12px;
     border-radius: 10px;
     background: var(--surface-2);
@@ -379,6 +381,8 @@
     font: inherit;
     font-weight: 500;
     padding: 0;
+    min-width: 0;
+    text-overflow: ellipsis;
     cursor: pointer;
   }
   .pill select:disabled {
@@ -487,6 +491,35 @@
     .pill select {
       text-align: right;
       direction: rtl;
+    }
+  }
+  /*
+   * Móvil angosto (<= 400px: Galaxy A55 360, iPhone SE 375, iPhone 14 390). Con la etiqueta al lado,
+   * «Orden» + «Miembros» suman ~375px (cada select mide lo que su opción más larga) y no caben: la
+   * barra se ensanchaba, el navegador alejaba el zoom y quedaba una franja abajo. Aquí la etiqueta
+   * va encima del valor y las dos píldoras caben de sobra (hasta en 320px).
+   */
+  @media (max-width: 400px) {
+    .pill {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0;
+      height: 40px;
+      padding: 0 26px 0 10px;
+    }
+    .pill::after {
+      right: 10px;
+    }
+    .k {
+      font-size: 10.5px;
+      line-height: 1.1;
+    }
+    .pill select {
+      width: 100%;
+      line-height: 1.25;
+      text-align: left;
+      direction: ltr;
     }
   }
 </style>
