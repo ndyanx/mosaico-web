@@ -244,7 +244,7 @@ describe("createChannelList", () => {
 
 describe("parseListQuery", () => {
   it("lee los cuatro parámetros", () => {
-    assert.deepEqual(parseListQuery("?channel=%40ASMRKittyKlaw&section=shorts&sort_by=popular&members=public"), {
+    assert.deepEqual(parseListQuery("?channel=@ASMRKittyKlaw&section=shorts&sort_by=popular&members=public"), {
       channel: "@ASMRKittyKlaw", section: "shorts", sort_by: "popular", members: "public",
     });
   });

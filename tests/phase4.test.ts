@@ -6,6 +6,7 @@ import {
   membersAllowed,
   normalizeQuery,
   parseListQuery,
+  parseTitleFilter,
   sameQuery,
   toSearch,
 } from "../src/lib/urlState.ts";
@@ -16,10 +17,10 @@ const q = (over: Partial<ListQuery> = {}): ListQuery => ({ ...DEFAULT_QUERY, ...
 describe("urlState (fase 4)", () => {
   it("toSearch omite los valores por defecto", () => {
     assert.equal(toSearch(q()), "");
-    assert.equal(toSearch(q({ channel: "@a" })), "?channel=%40a");
+    assert.equal(toSearch(q({ channel: "@a" })), "?channel=@a");
     assert.equal(
       toSearch(q({ channel: "@a", section: "shorts", sort_by: "popular", members: "only" })),
-      "?channel=%40a&section=shorts&sort_by=popular&members=only",
+      "?channel=@a&section=shorts&sort_by=popular&members=only",
     );
   });
 
@@ -27,13 +28,21 @@ describe("urlState (fase 4)", () => {
     assert.ok(membersAllowed("videos") && membersAllowed("shorts"));
     assert.ok(!membersAllowed("streams"));
     assert.equal(normalizeQuery(q({ section: "streams", members: "only" })).members, "all");
-    assert.equal(toSearch(q({ channel: "@a", section: "streams", members: "public" })), "?channel=%40a&section=streams");
+    assert.equal(toSearch(q({ channel: "@a", section: "streams", members: "public" })), "?channel=@a&section=streams");
   });
 
   it("parse normaliza una URL inválida (streams + members=only)", () => {
     const p = parseListQuery("?channel=@a&section=live&members=only");
     assert.equal(p.section, "streams");
     assert.equal(p.members, "all");
+  });
+
+  it("toSearch deja la @ literal y parse lee las dos formas", () => {
+    assert.equal(toSearch(q({ channel: "@AriiFrost", sort_by: "popular" })), "?channel=@AriiFrost&sort_by=popular");
+    assert.equal(parseListQuery("?channel=%40AriiFrost").channel, "@AriiFrost"); // enlaces viejos
+    assert.equal(parseListQuery("?channel=@AriiFrost").channel, "@AriiFrost");
+    // un "%40" escrito por el usuario como texto no se confunde con una @
+    assert.equal(parseTitleFilter(toSearch(q(), "100%40")), "100%40");
   });
 
   it("round-trip: parse(toSearch(x)) == normalize(x)", () => {

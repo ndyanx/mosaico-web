@@ -74,7 +74,7 @@ export function parseFind(search: string): string {
 
 /**
  * Serializa la consulta: omite lo que vale el default (URLs cortas) y devuelve
- * "" o "?...". Es la inversa de parseListQuery: parse(toSearch(q)) equivale a normalizeQuery(q).
+ * "" o "?..." (con "@" literal, no "%40"). Es la inversa de parseListQuery: parse(toSearch(q)) equivale a normalizeQuery(q).
  * `titleFilter` (opcional) se añade como `q`; `find` (opcional), como `find`.
  */
 export function toSearch(query: ListQuery, titleFilter = "", find = ""): string {
@@ -88,7 +88,9 @@ export function toSearch(query: ListQuery, titleFilter = "", find = ""): string 
   if (f) p.set("q", f);
   const fd = find.replace(/\s+/g, " ").trim().slice(0, MAX_FIND_LENGTH);
   if (fd) p.set("find", fd);
-  const s = p.toString();
+  // La "@" es valida dentro de un query string: se deja literal para que el enlace se lea mejor
+  // (?channel=@canal en vez de ?channel=%40canal). URLSearchParams decodifica las dos formas.
+  const s = p.toString().replaceAll("%40", "@");
   return s ? `?${s}` : "";
 }
 

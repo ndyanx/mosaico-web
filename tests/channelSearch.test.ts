@@ -362,10 +362,10 @@ describe("URL: ?find=", () => {
     assert.equal(parseFind(""), "");
     assert.equal(parseFind(`?find=${"x".repeat(300)}`).length, 100);
     const q = { ...DEFAULT_QUERY, channel: "@a" };
-    assert.equal(toSearch(q, "", "calming corner"), "?channel=%40a&find=calming+corner");
-    assert.equal(toSearch(q, "gato", "perro"), "?channel=%40a&q=gato&find=perro");
+    assert.equal(toSearch(q, "", "calming corner"), "?channel=@a&find=calming+corner");
+    assert.equal(toSearch(q, "gato", "perro"), "?channel=@a&q=gato&find=perro");
     assert.equal(toSearch(DEFAULT_QUERY, "", " x  y "), "?find=x+y");
-    assert.equal(toSearch(q), "?channel=%40a");
+    assert.equal(toSearch(q), "?channel=@a");
     assert.equal(parseFind(toSearch(q, "", "calming corner")), "calming corner");
     assert.equal(parseListQuery(toSearch(q, "", "calming")).channel, "@a");
   });

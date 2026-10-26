@@ -74,9 +74,9 @@ describe("title en toEntry", () => {
 describe("?q= en la URL", () => {
   it("toSearch añade q solo si hay texto; el round-trip lo conserva", () => {
     const q = { ...DEFAULT_QUERY, channel: "@a" };
-    assert.equal(toSearch(q), "?channel=%40a");
-    assert.equal(toSearch(q, "  "), "?channel=%40a");
-    assert.equal(toSearch(q, "gato rojo"), "?channel=%40a&q=gato+rojo");
+    assert.equal(toSearch(q), "?channel=@a");
+    assert.equal(toSearch(q, "  "), "?channel=@a");
+    assert.equal(toSearch(q, "gato rojo"), "?channel=@a&q=gato+rojo");
     assert.equal(parseTitleFilter(toSearch(q, "camión ñ & más")), "camión ñ & más");
   });
   it("q no afecta a la consulta de la API", () => {
