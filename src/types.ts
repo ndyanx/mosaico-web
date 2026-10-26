@@ -56,6 +56,49 @@ export interface ChannelPage {
   items: ChannelItem[];
 }
 
+// ---------------------------------------------------------------------------
+// Búsqueda de canales: GET /v1/search/channels
+// ---------------------------------------------------------------------------
+
+/** Avatar de un canal (YouTube manda 88 y 176 px; la API ya les pone https). */
+export interface AvatarImage {
+  url: string;
+  width: number | null;
+  height: number | null;
+}
+
+/** Un canal de los resultados de búsqueda. */
+export interface ChannelHit {
+  /** Id UC… */
+  id: string;
+  /** Enlace al canal en YouTube. */
+  url: string;
+  /** "@handle", o null si el canal no tiene. */
+  handle: string | null;
+  title: string;
+  /** "" si no hay. */
+  description: string;
+  /** Texto de YouTube ("36.3K subscribers"); null si el canal oculta sus suscriptores. */
+  subscribers_text: string | null;
+  /** Aproximado; null si no se pudo leer. */
+  subscribers: number | null;
+  /** De menor a mayor ancho; [] si no hay avatar. */
+  thumbnails: AvatarImage[];
+}
+
+/** Respuesta de `GET /v1/search/channels`. */
+export interface ChannelSearchPage {
+  query: string;
+  offset: number;
+  count: number;
+  /** Aproximado, según YouTube; null si no lo dijo. */
+  total_estimate: number | null;
+  has_more: boolean;
+  cache: "miss" | "hit";
+  updated_at: string;
+  items: ChannelHit[];
+}
+
 export interface ApiIssue {
   param: string;
   message: string;

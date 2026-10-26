@@ -4,6 +4,9 @@
   import { membersAllowed } from "../lib/urlState.ts";
   import { clampCols, MAX_COLS, MIN_COLS, type Theme } from "../lib/prefs.ts";
   import { SITE_NAME } from "../lib/site.ts";
+  import type { RecentChannel } from "../lib/recentChannels.ts";
+  import type { ChannelHit } from "../types.ts";
+  import ChannelSearchBox from "./ChannelSearchBox.svelte";
 
   interface Props {
     query: ListQuery;
@@ -21,6 +24,14 @@
     /** Búsqueda por título vigente (se aplica en el navegador, sin pedir nada a la API). */
     titleFilter: string;
     onTitleFilter: (v: string) => void;
+    /** Búsqueda de canales abierta (`?find=`), "" si no hay. */
+    find: string;
+    recents: RecentChannel[];
+    /** Abrir un canal en el mosaico (escrito a mano o elegido de la lista). */
+    onOpenChannel: (value: string, from?: ChannelHit) => void;
+    onShowResults: (q: string) => void;
+    onRemoveRecent: (key: string) => void;
+    onClearRecents: () => void;
   }
   let {
     query,
@@ -34,6 +45,12 @@
     onEmbed,
     titleFilter,
     onTitleFilter,
+    find,
+    recents,
+    onOpenChannel,
+    onShowResults,
+    onRemoveRecent,
+    onClearRecents,
   }: Props = $props();
 
   const SECTION_LABEL: Record<Section, string> = { videos: "Videos", shorts: "Shorts", streams: "Directos" };
@@ -41,25 +58,7 @@
   const MEMBERS_LABEL: Record<Members, string> = { all: "Todos", public: "Públicos", only: "Solo miembros" };
   const THEME_LABEL: Record<Theme, string> = { system: "Sistema", light: "Claro", dark: "Oscuro" };
 
-  // El canal se confirma con Enter o al salir del campo (no una petición por tecla).
-  // Se resincroniza si la URL cambia (atrás/adelante).
-  let draft = $state("");
-  let input = $state<HTMLInputElement | null>(null);
-  $effect(() => {
-    draft = query.channel;
-  });
-
   const canMembers = $derived(membersAllowed(query.section));
-
-  function commitChannel(): void {
-    const channel = draft.trim();
-    draft = channel;
-    if (channel !== query.channel) onChange({ ...query, channel });
-  }
-  function clearChannel(): void {
-    draft = "";
-    input?.focus();
-  }
 
   // Título: se filtra mientras escribes, con una pausa corta para no re-maquetar en cada tecla.
   // Se resincroniza si la URL cambia (atrás/adelante) o si cambiar de canal lo vacía.
@@ -89,33 +88,15 @@
     <svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="15" fill="var(--accent)" /><rect x="14" y="14" width="16" height="36" rx="4" fill="var(--on-accent)" /><rect x="34" y="14" width="16" height="20" rx="4" fill="var(--on-accent)" opacity=".9" /><rect x="34" y="38" width="16" height="12" rx="4" fill="var(--on-accent)" opacity=".65" /></svg>
     <span class="brand-name">{SITE_NAME}</span>
   </a>
-  <form
-    class="search"
-    role="search"
-    onsubmit={(e) => {
-      e.preventDefault();
-      commitChannel();
-    }}
-  >
-    <svg class="ico" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
-    <input
-      bind:this={input}
-      type="text"
-      name="channel"
-      aria-label="Canal"
-      bind:value={draft}
-      onblur={commitChannel}
-      placeholder="@handle, id UC… o URL del canal"
-      autocomplete="off"
-      autocapitalize="off"
-      spellcheck="false"
-    />
-    {#if draft}
-      <button type="button" class="clear" aria-label="Borrar canal" onclick={clearChannel}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-      </button>
-    {/if}
-  </form>
+  <ChannelSearchBox
+    channel={query.channel}
+    {find}
+    {recents}
+    {onOpenChannel}
+    {onShowResults}
+    {onRemoveRecent}
+    {onClearRecents}
+  />
 
   <form
     class="search title"
@@ -140,7 +121,7 @@
           clearTitle();
         }
       }}
-      disabled={!query.channel}
+      disabled={!query.channel || !!find}
       placeholder="Buscar por título…"
       autocomplete="off"
       autocapitalize="off"
@@ -253,7 +234,7 @@
     border-bottom: 1px solid var(--border);
   }
 
-  /* Buscador: ancho acotado (antes ocupaba toda la barra) */
+  /* Filtro por título (el buscador de canales tiene su propio componente) */
   .search {
     position: relative;
     flex: 0 1 320px;
@@ -476,11 +457,6 @@
     }
     .bar {
       padding: 10px 12px;
-    }
-    .search {
-      order: 1;
-      flex: 1 1 0;
-      min-width: 0;
     }
     .search.title {
       order: 3;

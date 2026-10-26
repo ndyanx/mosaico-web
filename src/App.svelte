@@ -4,18 +4,40 @@
   import PlayerModal from "./components/PlayerModal.svelte";
   import { canEmbed } from "./lib/embed.ts";
   import ControlBar from "./components/ControlBar.svelte";
+  import ChannelResults from "./components/ChannelResults.svelte";
+  import ChannelAvatar from "./components/ChannelAvatar.svelte";
   import { createChannelList, type ListState } from "./lib/channelList.ts";
-  import { normalizeQuery, parseListQuery, parseTitleFilter, sameQuery, toSearch } from "./lib/urlState.ts";
+  import { MAX_FIND_LENGTH, normalizeQuery, parseFind, parseListQuery, parseTitleFilter, sameQuery, toSearch } from "./lib/urlState.ts";
+  import { channelValueOf, cleanQuery, createFinder, type FinderState } from "./lib/channelSearch.ts";
+  import {
+    addRecent,
+    loadRecents,
+    recentFromHit,
+    recentFromValue,
+    removeRecent,
+    saveRecents,
+    type RecentChannel,
+  } from "./lib/recentChannels.ts";
   import { filterByTitle, titleTerms } from "./lib/titleSearch.ts";
   import { columnsFor } from "./lib/layout.ts";
   import { titleFor } from "./lib/site.ts";
   import { applyTheme, clampCols, loadPrefs, nextTheme, savePrefs, type Theme } from "./lib/prefs.ts";
-  import type { ChannelEntry, ListQuery } from "./types.ts";
+  import type { ChannelEntry, ChannelHit, ListQuery } from "./types.ts";
 
   // La consulta vive en la URL (?channel=@handle&section=shorts&sort_by=&members=) y la edita la ControlBar.
   let query = $state<ListQuery>(parseListQuery(location.search));
   // Búsqueda por título (?q=): se filtra en el navegador sobre lo ya descargado, sin reiniciar la lista.
   let titleFilter = $state(parseTitleFilter(location.search));
+  // Búsqueda de canales (?find=): con texto, la página de resultados ocupa el lugar del mosaico.
+  // El canal que se estaba viendo se conserva en la URL para poder volver.
+  let find = $state(parseFind(location.search));
+
+  // Canales abiertos desde la barra (solo en este navegador).
+  let recents = $state.raw<RecentChannel[]>(loadRecents());
+  function setRecents(next: RecentChannel[]): void {
+    recents = next;
+    saveRecents(next);
+  }
 
   // Preferencias de vista (no van en la URL): tema y máximo de columnas.
   const initial = loadPrefs();
@@ -29,7 +51,7 @@
 
   // Título de la pestaña: refleja el canal que se está viendo.
   $effect(() => {
-    document.title = titleFor(query.channel);
+    document.title = titleFor(query.channel, find);
   });
 
   // Reproductor embebido. Con members=only los videos no se pueden embeber: se abre YouTube.
@@ -41,23 +63,37 @@
   }
 
   // Un cambio de controles crea una entrada de historial (atrás/adelante lo deshacen);
-  // si la consulta normalizada no cambia, no se hace nada (no reinicia la lista).
-  function applyQuery(next: ListQuery): void {
+  // si ni la consulta normalizada ni la búsqueda de canales cambian, no se hace nada (no reinicia la lista).
+  function go(next: ListQuery, nextFind: string): void {
     const q = normalizeQuery(next);
-    if (sameQuery(q, query)) return;
+    const f = cleanQuery(nextFind).slice(0, MAX_FIND_LENGTH);
+    const queryChanged = !sameQuery(q, query);
+    if (!queryChanged && f === find) return;
     // Otro canal = otros títulos: la búsqueda no se arrastra. Sección/orden/miembros sí la conservan.
     if (q.channel !== query.channel) titleFilter = "";
-    query = q;
-    playing = null;
-    history.pushState(null, "", `${location.pathname}${toSearch(q, titleFilter)}${location.hash}`);
+    if (queryChanged) {
+      query = q;
+      playing = null;
+    }
+    find = f;
+    history.pushState(null, "", `${location.pathname}${toSearch(q, titleFilter, f)}${location.hash}`);
   }
+  // Sección / orden / miembros: cierran la página de resultados y vuelven al mosaico.
+  const applyQuery = (next: ListQuery): void => go(next, "");
+
+  function openChannel(value: string, from?: ChannelHit): void {
+    setRecents(addRecent(recents, from ? recentFromHit(from) : recentFromValue(value)));
+    go({ ...query, channel: value }, "");
+  }
+  const showResults = (q: string): void => go(query, q);
+  const closeResults = (): void => go(query, "");
 
   // Escribir en el buscador de títulos no crea historial (una entrada por tecla sería inmanejable).
   function setTitleFilter(v: string): void {
     const f = v.trim();
     if (f === titleFilter) return;
     titleFilter = f;
-    history.replaceState(null, "", `${location.pathname}${toSearch(query, f)}${location.hash}`);
+    history.replaceState(null, "", `${location.pathname}${toSearch(query, f, find)}${location.hash}`);
   }
 
   function onPopState(): void {
@@ -67,6 +103,7 @@
       playing = null;
     }
     titleFilter = parseTitleFilter(location.search);
+    find = parseFind(location.search);
   }
 
   let list = $state.raw<ListState>({
@@ -90,6 +127,15 @@
     untrack(() => loader.reset(q));
   });
   $effect(() => () => loader.dispose());
+
+  // Resultados de la búsqueda de canales: se piden cuando `find` tiene texto.
+  const finder = createFinder({ onChange: (s) => (found = s) });
+  let found = $state.raw<FinderState>(finder.getState());
+  $effect(() => {
+    const f = find;
+    untrack(() => finder.search(f));
+  });
+  $effect(() => () => finder.dispose());
 
   const empty = $derived(list.phase === "ready" && list.entries.length === 0 && !list.hasMore);
 
@@ -149,7 +195,7 @@
   <ControlBar
     {query}
     onChange={applyQuery}
-    summary={list.phase === "ready" ? counter : ""}
+    summary={find ? (found.phase === "ready" ? `${found.items.length} canales` : "") : list.phase === "ready" ? counter : ""}
     {maxCols}
     onMaxCols={(n) => (maxCols = clampCols(n))}
     {theme}
@@ -158,6 +204,12 @@
     onEmbed={(v) => (embed = v)}
     {titleFilter}
     onTitleFilter={setTitleFilter}
+    {find}
+    {recents}
+    onOpenChannel={openChannel}
+    onShowResults={showResults}
+    onRemoveRecent={(key) => setRecents(removeRecent(recents, key))}
+    onClearRecents={() => setRecents([])}
   />
 
   {#if list.stale}
@@ -168,6 +220,15 @@
   {/if}
 
   <main class="stage">
+    {#if find}
+      <ChannelResults
+        search={found}
+        onOpen={(hit) => openChannel(channelValueOf(hit), hit)}
+        onMore={() => finder.loadMore()}
+        onRetry={() => finder.retry()}
+        onClose={query.channel ? closeResults : undefined}
+      />
+    {:else}
     <MasonryGrid entries={shown} generation={gridGeneration} maxColumns={maxCols} onNearEnd={() => loader.loadMore()} onOpen={embedOn ? openPlayer : undefined}>
       {#snippet footer()}
         {#if list.phase === "ready"}
@@ -196,7 +257,17 @@
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3" /><path d="m10 9.5 5 2.5-5 2.5z" fill="currentColor" /></svg>
         </div>
         <h2>Explora un canal</h2>
-        <p>Escribe un <code>@handle</code>, un id <code>UC…</code> o la URL del canal y pulsa Enter.</p>
+        <p>Busca un canal por su nombre, o escribe un <code>@handle</code>, un id <code>UC…</code> o pega la URL y pulsa Enter.</p>
+        {#if recents.length}
+          <div class="recents" aria-label="Canales recientes">
+            {#each recents as r (r.key)}
+              <button type="button" class="rc" onclick={() => openChannel(r.key)}>
+                <ChannelAvatar id={r.key} title={r.title} src={r.avatar} size={24} />
+                <span>{r.title}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
       </div>
     {:else if list.phase === "loading"}
       <div class="skeleton-wrap" role="status" aria-label="Cargando canal">
@@ -245,6 +316,7 @@
         <h2>Sin resultados</h2>
         <p>Este canal no tiene contenido en esta sección.</p>
       </div>
+    {/if}
     {/if}
   </main>
 </div>
@@ -298,6 +370,43 @@
   .state .btn {
     pointer-events: auto;
     margin-top: 6px;
+  }
+  .recents {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    max-width: 560px;
+    margin-top: 10px;
+    pointer-events: auto;
+  }
+  .rc {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 220px;
+    height: 36px;
+    padding: 0 12px 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .rc span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .rc:hover {
+    border-color: var(--accent);
+    box-shadow: var(--shadow);
+  }
+  .rc:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
   .state h2 {
     margin: 4px 0 0;

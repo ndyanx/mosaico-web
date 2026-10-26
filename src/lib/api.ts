@@ -1,5 +1,5 @@
 // Cliente tipado de GET /v1/channel (una página para el masonry).
-import type { ApiErrorBody, ApiIssue, ChannelPage, ListQuery } from "../types.ts";
+import type { ApiErrorBody, ApiIssue, ChannelPage, ChannelSearchPage, ListQuery } from "../types.ts";
 
 /**
  * Base de la API.
@@ -140,6 +140,77 @@ export async function fetchChannelPage(
     throw new ApiError(res.status, "InvalidResponse", "El servidor devolvió una respuesta que no es JSON válido.");
   }
   if (!isChannelPage(data)) {
+    throw new ApiError(res.status, "InvalidResponse", "El servidor devolvió una respuesta con formato inesperado.");
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Búsqueda de canales
+// ---------------------------------------------------------------------------
+
+/** Tamaño de página de la página de resultados. */
+export const SEARCH_PAGE_SIZE = 20;
+/** Sugerencias del desplegable (una sola petición pequeña). */
+export const SUGGEST_SIZE = 6;
+/** Mínimo de caracteres que acepta el backend (`q`). */
+export const MIN_SEARCH_CHARS = 2;
+
+export interface FetchSearchOptions {
+  offset?: number;
+  max?: number;
+  signal?: AbortSignal;
+  /** Solo para pruebas; por defecto API_BASE. */
+  baseUrl?: string;
+}
+
+export function buildSearchUrl(q: string, opts: FetchSearchOptions = {}): string {
+  const params = new URLSearchParams({
+    q: q.trim(),
+    max: String(opts.max ?? SEARCH_PAGE_SIZE),
+    offset: String(opts.offset ?? 0),
+  });
+  return `${opts.baseUrl ?? API_BASE}/v1/search/channels?${params}`;
+}
+
+function isChannelHit(v: unknown): boolean {
+  if (typeof v !== "object" || v === null) return false;
+  const h = v as Record<string, unknown>;
+  return typeof h.id === "string" && typeof h.title === "string" && Array.isArray(h.thumbnails);
+}
+
+function isSearchPage(v: unknown): v is ChannelSearchPage {
+  if (typeof v !== "object" || v === null) return false;
+  const p = v as Partial<ChannelSearchPage>;
+  return Array.isArray(p.items) && typeof p.offset === "number" && typeof p.has_more === "boolean" && p.items.every(isChannelHit);
+}
+
+/** Busca canales por texto. Mismos errores que `fetchChannelPage` (ApiError / AbortError). */
+export async function fetchChannelSearch(q: string, opts: FetchSearchOptions = {}): Promise<ChannelSearchPage> {
+  if (q.trim().length < MIN_SEARCH_CHARS) {
+    throw new ApiError(400, "ValidationError", `Escribe al menos ${MIN_SEARCH_CHARS} caracteres.`, [
+      { param: "q", message: "muy corto" },
+    ]);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(buildSearchUrl(q, opts), { signal: opts.signal, headers: { accept: "application/json" } });
+  } catch (e) {
+    if (isAbortError(e)) throw e;
+    throw new ApiError(0, "NetworkError", "No se pudo conectar con el servidor. Si llevaba un rato sin uso, puede estar despertando: reintenta en unos segundos.");
+  }
+
+  if (!res.ok) throw await errorFromResponse(res);
+
+  let data: unknown;
+  try {
+    data = await res.json();
+  } catch (e) {
+    if (isAbortError(e)) throw e;
+    throw new ApiError(res.status, "InvalidResponse", "El servidor devolvió una respuesta que no es JSON válido.");
+  }
+  if (!isSearchPage(data)) {
     throw new ApiError(res.status, "InvalidResponse", "El servidor devolvió una respuesta con formato inesperado.");
   }
   return data;

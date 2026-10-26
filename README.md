@@ -15,11 +15,38 @@ pnpm build        # genera dist/
 
 En desarrollo el frontend llama a `/api/...` y el proxy de Vite reenvía al backend local
 (`BACKEND_URL=http://127.0.0.1:4000 pnpm dev` para otro destino). Sin backend real, usa
-`tools/dev-fake.ts` (instrucciones dentro del archivo).
+`tools/dev-fake.ts` (se copia a `channel-feed-api/test/`, donde ya están `fakeYoutube.ts` y
+`fakeSearch.ts`; instrucciones dentro del archivo). Ahí cualquier texto devuelve 47 canales de prueba;
+`vacio` = sin resultados, `lento` = 2 s de retraso, `error` = 502.
+
+## Buscar canales
+
+La primera caja de la barra sirve para dos cosas y decide sola cuál:
+
+| Lo que escribes | Qué pasa |
+|-----------------|----------|
+| `@handle`, id `UC…`, `channel/UC…` o una URL de canal | Aparece «Abrir @handle»: Enter abre el mosaico directo, sin buscar. |
+| Texto (2 o más caracteres): `calming corner` | Tras una pausa de 300 ms se piden 6 sugerencias (avatar, nombre, @handle y suscriptores). Enter busca; clic en una sugerencia abre ese canal. |
+| Nada (caja vacía al enfocar) | Los canales recientes. `Supr` sobre uno resaltado, o su `×`, lo quita; «Borrar todo» vacía la lista. |
+
+- **Página de resultados:** «Ver todos los resultados» (Enter sobre el texto) muestra tarjetas con avatar
+  grande, nombre, @handle, suscriptores y descripción, con scroll infinito (20 por página, sin repetidos).
+  Clic en una tarjeta abre el canal; «Volver al mosaico» regresa al canal que se estaba viendo.
+- **URL:** la página de resultados vive en `?find=texto` y conserva `?channel=` y `?q=`: atrás/adelante y
+  los enlaces compartidos funcionan. Cambiar sección, orden o miembros cierra los resultados.
+- **Teclado:** `↑` `↓` mueven el resaltado, `Enter` elige, `Esc` cierra la lista (otra vez: revierte el texto).
+- **Avatares:** vienen del backend (`thumbnails`, 88 y 176 px). Se usa el más chico que cubra el tamaño por la
+  densidad de pantalla y, si la imagen falla o no existe, se muestran las iniciales con un color fijo por canal.
+  Si un día pones una CSP, `img-src` debe permitir `https://yt3.ggpht.com`.
+- **Recientes:** se guardan en `localStorage` (`ytgallery:recent-channels`, máximo 8), solo en este navegador.
+- **Cambio de comportamiento:** el canal escrito a mano ya no se confirma al salir del campo; hay que pulsar
+  Enter o elegir la fila «Abrir…».
+- Lógica sin Svelte en `src/lib/channelSearch.ts` y `src/lib/recentChannels.ts`; pruebas en
+  `tests/channelSearch.test.ts`. Necesita el endpoint `GET /v1/search/channels` del backend.
 
 ## Búsqueda por título
 
-La barra tiene un segundo campo, «Buscar por título…», que filtra en el navegador (sin pedir nada
+Junto a la caja de canales hay otro campo, «Buscar por título…», que filtra en el navegador (sin pedir nada
 nuevo a la API) sobre los títulos que manda el backend en cada item (`title`).
 
 - Sin mayúsculas ni tildes; con varias palabras deben aparecer **todas**, en cualquier orden.

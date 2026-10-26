@@ -4,6 +4,9 @@ import { MEMBERS, SECTIONS, SORTS } from "../types.ts";
 import type { ListQuery, Section } from "../types.ts";
 import { MAX_FILTER_LENGTH } from "./titleSearch.ts";
 
+/** Tope de caracteres de la búsqueda de canales (`?find=`); el backend acepta hasta 100. */
+export const MAX_FIND_LENGTH = 100;
+
 export const DEFAULT_QUERY: ListQuery = {
   channel: "",
   section: "videos",
@@ -62,11 +65,19 @@ export function parseTitleFilter(search: string): string {
 }
 
 /**
+ * Búsqueda de canales abierta (`?find=`): muestra la página de resultados en lugar del mosaico.
+ * No es parte de la consulta a la lista: el canal que se estaba viendo se conserva en la URL.
+ */
+export function parseFind(search: string): string {
+  return (new URLSearchParams(search).get("find") ?? "").replace(/\s+/g, " ").trim().slice(0, MAX_FIND_LENGTH);
+}
+
+/**
  * Serializa la consulta: omite lo que vale el default (URLs cortas) y devuelve
  * "" o "?...". Es la inversa de parseListQuery: parse(toSearch(q)) equivale a normalizeQuery(q).
- * `titleFilter` (opcional) se añade como `q`.
+ * `titleFilter` (opcional) se añade como `q`; `find` (opcional), como `find`.
  */
-export function toSearch(query: ListQuery, titleFilter = ""): string {
+export function toSearch(query: ListQuery, titleFilter = "", find = ""): string {
   const q = normalizeQuery(query);
   const p = new URLSearchParams();
   if (q.channel) p.set("channel", q.channel);
@@ -75,6 +86,8 @@ export function toSearch(query: ListQuery, titleFilter = ""): string {
   if (q.members !== DEFAULT_QUERY.members) p.set("members", q.members);
   const f = titleFilter.trim().slice(0, MAX_FILTER_LENGTH);
   if (f) p.set("q", f);
+  const fd = find.replace(/\s+/g, " ").trim().slice(0, MAX_FIND_LENGTH);
+  if (fd) p.set("find", fd);
   const s = p.toString();
   return s ? `?${s}` : "";
 }

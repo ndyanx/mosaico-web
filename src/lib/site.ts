@@ -3,8 +3,13 @@
 export const SITE_NAME = "Mosaico";
 export const SITE_TAGLINE = "Galería de videos, shorts y directos de cualquier canal de YouTube";
 
-/** Título de la pestaña: "Mosaico · Galería…" sin canal, o "@canal · Mosaico" con canal. */
-export function titleFor(channel: string): string {
+/**
+ * Título de la pestaña: "Mosaico · Galería…" sin canal, o "@canal · Mosaico" con canal.
+ * Con una búsqueda de canales abierta (`find`): "Canales: texto · Mosaico".
+ */
+export function titleFor(channel: string, find = ""): string {
+  const f = find.trim();
+  if (f) return `Canales: ${f.length > 40 ? `${f.slice(0, 39)}…` : f} · ${SITE_NAME}`;
   const c = channel.trim();
   if (!c) return `${SITE_NAME} · Galería de canales de YouTube`;
   // Recorta URLs largas: la pestaña solo muestra ~30 caracteres.
