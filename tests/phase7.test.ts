@@ -1,6 +1,6 @@
 // Fase 7: embed en modal (lógica pura).
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import { canEmbed, embedUrl, isPlainClick, videoIdOf } from "../src/lib/embed.ts";
 
 const ID = "cjFZfyjyADE";

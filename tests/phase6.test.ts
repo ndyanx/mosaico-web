@@ -1,6 +1,6 @@
 // Fase 6: preferencias (tema/columnas) y breakpoints.
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import { columnBreakpoints, columnsFor } from "../src/lib/layout.ts";
 import { clampCols, DEFAULT_PREFS, loadPrefs, nextTheme, parsePrefs, PREFS_KEY, savePrefs } from "../src/lib/prefs.ts";
 

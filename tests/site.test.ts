@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import { SITE_NAME, titleFor } from "../src/lib/site.ts";
 
 describe("titleFor (titulo de la pestana)", () => {

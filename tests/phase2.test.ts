@@ -3,7 +3,7 @@
 import assert from "node:assert/strict";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { after, before, describe, it } from "node:test";
+import { afterAll, beforeAll, describe, it } from "vite-plus/test";
 import { ApiError, buildPageUrl, fetchChannelPage, isAbortError } from "../src/lib/api.ts";
 import { getItemHeight, toEntry } from "../src/lib/thumbs.ts";
 import type { ChannelItem, ListQuery } from "../src/types.ts";
@@ -100,7 +100,7 @@ describe("fetchChannelPage", () => {
     has_more: true, cache: "miss", updated_at: "2026-10-24T00:00:00.000Z", items: [item()],
   };
 
-  before(async () => {
+  beforeAll(async () => {
     server = createServer((req, res) => {
       const u = new URL(req.url ?? "/", "http://x");
       const send = (status: number, body: string, type = "application/json") => {
@@ -123,7 +123,7 @@ describe("fetchChannelPage", () => {
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}/api`;
   });
-  after(() => { server.closeAllConnections(); server.close(); });
+  afterAll(() => { server.closeAllConnections(); server.close(); });
 
   const q = (channel: string): ListQuery => ({ ...query, channel });
 

@@ -1,6 +1,6 @@
 // Pruebas de la búsqueda por título (lógica pura). node --test tests/
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import { filterByTitle, matchesTitle, normalizeText, titleTerms } from "../src/lib/titleSearch.ts";
 import { parseTitleFilter, toSearch, DEFAULT_QUERY, parseListQuery } from "../src/lib/urlState.ts";
 import { toEntry } from "../src/lib/thumbs.ts";

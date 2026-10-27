@@ -1,6 +1,6 @@
 // Pruebas de fase 4: estado de la URL (sin navegador). node --test tests/
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import {
   DEFAULT_QUERY,
   membersAllowed,

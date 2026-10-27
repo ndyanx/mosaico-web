@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
-import { after, before, describe, it } from "node:test";
+import { afterAll, beforeAll, describe, it } from "vite-plus/test";
 import { ApiError, buildSearchUrl, fetchChannelSearch } from "../src/lib/api.ts";
 import {
   avatarHue,
@@ -115,7 +115,7 @@ describe("API: buildSearchUrl / fetchChannelSearch", () => {
   let server: Server;
   let base = "";
   const seen: string[] = [];
-  before(async () => {
+  beforeAll(async () => {
     server = createServer((req, res) => {
       seen.push(req.url ?? "");
       const url = new URL(req.url ?? "", "http://x");
@@ -133,7 +133,7 @@ describe("API: buildSearchUrl / fetchChannelSearch", () => {
     await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
     base = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
   });
-  after(() => server.close());
+  afterAll(() => server.close());
 
   it("buildSearchUrl codifica y recorta", () => {
     const u = new URL(buildSearchUrl("  calming corner ", { offset: 20, max: 6, baseUrl: "http://h" }));

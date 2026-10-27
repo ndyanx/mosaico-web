@@ -1,7 +1,7 @@
 // Pruebas de fase 3: lista paginada (channelList) y parseo de la URL.
 //   node --test "tests/*.test.ts"
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, it } from "vite-plus/test";
 import { ApiError } from "../src/lib/api.ts";
 import { createChannelList, type ListState } from "../src/lib/channelList.ts";
 import { parseListQuery } from "../src/lib/urlState.ts";
