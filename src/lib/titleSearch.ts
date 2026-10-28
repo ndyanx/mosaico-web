@@ -4,7 +4,7 @@
 // - Varias palabras = todas deben aparecer (en cualquier orden): "gato rojo" encuentra "El rojo del gato".
 // - Sin términos devuelve el MISMO array (el grid distingue "misma lista" por identidad/longitud).
 // - Conserva el orden, así que filtrar una lista que solo crece por el final da otra que también.
-import type { ChannelEntry } from "../types.ts";
+import type { ChannelEntry } from "./types.ts";
 
 /** Tope de caracteres de la búsqueda (también en la URL). */
 export const MAX_FILTER_LENGTH = 120;

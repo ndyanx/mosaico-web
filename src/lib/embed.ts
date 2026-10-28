@@ -1,5 +1,5 @@
 // Reproducción embebida (modal) en lugar de abrir YouTube en otra pestaña.
-import type { ChannelEntry, ListQuery } from "../types.ts";
+import type { ChannelEntry, ListQuery } from "./types.ts";
 
 const VIDEO_ID = /^[A-Za-z0-9_-]{11}$/;
 

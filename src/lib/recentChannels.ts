@@ -1,6 +1,6 @@
 // Canales recientes (los que abriste desde la barra). Persisten en localStorage, solo en este navegador.
 import { avatarUrl, channelValueOf } from "./channelSearch.ts";
-import type { ChannelHit } from "../types.ts";
+import type { ChannelHit } from "./types.ts";
 
 export const RECENTS_KEY = "ytgallery:recent-channels";
 export const MAX_RECENTS = 8;

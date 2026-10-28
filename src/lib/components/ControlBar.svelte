@@ -1,10 +1,10 @@
 <script lang="ts">
   import { MEMBERS, SECTIONS, SORTS } from "../types.ts";
   import type { ListQuery, Members, Section, SortBy } from "../types.ts";
-  import { membersAllowed } from "../lib/urlState.ts";
-  import { clampCols, MAX_COLS, MIN_COLS, type Theme } from "../lib/prefs.ts";
-  import { SITE_NAME } from "../lib/site.ts";
-  import type { RecentChannel } from "../lib/recentChannels.ts";
+  import { membersAllowed } from "../urlState.ts";
+  import { clampCols, MAX_COLS, MIN_COLS, type Theme } from "../prefs.ts";
+  import { SITE_NAME } from "../site.ts";
+  import type { RecentChannel } from "../recentChannels.ts";
   import type { ChannelHit } from "../types.ts";
   import ChannelSearchBox from "./ChannelSearchBox.svelte";
 

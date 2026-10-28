@@ -3,7 +3,7 @@
 // - shorts: alterna `frames` (mismo tamaño que `cover`); solo los que existen de verdad.
 // Regla de oro: NUNCA se reemplaza la miniatura salvo que el recurso se haya cargado y validado.
 // La lógica es independiente de Svelte y del DOM (el `probe` se inyecta) para poder probarla.
-import type { ChannelEntry } from "../types.ts";
+import type { ChannelEntry } from "./types.ts";
 
 export interface ProbeResult {
   width: number;

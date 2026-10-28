@@ -1,35 +1,11 @@
-import { defineConfig, loadEnv, type Plugin } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
-
-/**
- * Metaetiquetas que necesitan URL ABSOLUTA (canonical, og:url, og:image): Facebook, X, WhatsApp, etc.
- * no resuelven rutas relativas. Con VITE_SITE_URL definida se escriben; sin ella se omiten
- * (el sitio funciona igual, solo se pierde la imagen al compartir el enlace).
- */
-function siteMeta(siteUrl: string): Plugin {
-  const base = siteUrl.trim().replace(/\/+$/, "");
-  return {
-    name: "site-meta",
-    transformIndexHtml(html) {
-      const canonical = base ? `<link rel="canonical" href="${base}/" />` : "";
-      const og = base
-        ? [
-            `<meta property="og:url" content="${base}/" />`,
-            `<meta property="og:image" content="${base}/og-image.png" />`,
-            `<meta property="og:image:width" content="1200" />`,
-            `<meta property="og:image:height" content="630" />`,
-            `<meta name="twitter:image" content="${base}/og-image.png" />`,
-          ].join("\n    ")
-        : "";
-      return html.replace("%SITE_URL_CANONICAL%", canonical).replace("%SITE_URL_OG%", og);
-    },
-  };
-}
+import adapter from "@sveltejs/adapter-static";
+import { sveltekit } from "@sveltejs/kit/vite";
+import { defineConfig, lazyPlugins, loadEnv } from "vite-plus";
 
 // Desarrollo: el frontend llama a /api/v1/channel y el proxy quita el prefijo /api y
 // reenvia al backend local (channel-feed-api, `pnpm dev`, 127.0.0.1:3000).
 // Otro destino: BACKEND_URL=http://127.0.0.1:4000 pnpm dev
-// Produccion (Cloudflare Pages): no hay proxy; se usa VITE_API_URL (ver README).
+// Produccion (Cloudflare Pages): no hay proxy; se usa VITE_API_URL (ver .env.example).
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
   const proxy = {
@@ -40,7 +16,22 @@ export default defineConfig(({ mode }) => {
     },
   };
   return {
-    plugins: [svelte(), siteMeta(env.VITE_SITE_URL ?? "")],
+    fmt: {},
+    lint: {
+      jsPlugins: [{ name: "vite-plus", specifier: "vite-plus/oxlint-plugin" }],
+      rules: { "vite-plus/prefer-vite-plus-imports": "error" },
+      options: { typeAware: true, typeCheck: true },
+    },
+    plugins: lazyPlugins(() => [
+      sveltekit({
+        compilerOptions: {
+          // Force runes mode for the project, except for libraries. Can be removed in svelte 6.
+          runes: ({ filename }) => (filename.split(/[/\\]/).includes("node_modules") ? undefined : true),
+        },
+        // SPA estatica (Cloudflare Pages): todas las rutas caen en index.html.
+        adapter: adapter({ fallback: "index.html" }),
+      }),
+    ]),
     server: { proxy },
     preview: { proxy },
   };

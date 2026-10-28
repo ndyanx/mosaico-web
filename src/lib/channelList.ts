@@ -2,7 +2,7 @@
 // y descarta respuestas viejas. Sin Svelte: emite snapshots inmutables por `onChange`.
 import { ApiError, DEFAULT_PAGE_SIZE, fetchChannelPage, isAbortError } from "./api.ts";
 import { toEntries } from "./thumbs.ts";
-import type { CacheStatus, ChannelEntry, ListQuery } from "../types.ts";
+import type { CacheStatus, ChannelEntry, ListQuery } from "./types.ts";
 
 export type ListPhase =
   /** Sin canal que cargar. */

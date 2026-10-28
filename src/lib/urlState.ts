@@ -1,7 +1,7 @@
 // Estado de la lista <-> query string (la URL es compartible).
 // Fase 4: lectura y escritura. La ControlBar edita la consulta y App la sincroniza con el historial.
-import { MEMBERS, SECTIONS, SORTS } from "../types.ts";
-import type { ListQuery, Section } from "../types.ts";
+import { MEMBERS, SECTIONS, SORTS } from "./types.ts";
+import type { ListQuery, Section } from "./types.ts";
 import { MAX_FILTER_LENGTH } from "./titleSearch.ts";
 
 /** Tope de caracteres de la búsqueda de canales (`?find=`); el backend acepta hasta 100. */

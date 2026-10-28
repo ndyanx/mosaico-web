@@ -5,7 +5,7 @@
 //   createFinder       resultados paginados (scroll infinito), con dedupe por id
 //   formatSubscribers / avatarUrl / initials / avatarHue   presentación de un canal
 import { ApiError, MIN_SEARCH_CHARS, SEARCH_PAGE_SIZE, SUGGEST_SIZE, fetchChannelSearch, isAbortError } from "./api.ts";
-import type { ChannelHit } from "../types.ts";
+import type { ChannelHit } from "./types.ts";
 
 const UC_ID = /^UC[\w-]{22}$/;
 

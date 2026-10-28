@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { avatarHue, initials } from "../lib/channelSearch.ts";
+  import { avatarHue, initials } from "../channelSearch.ts";
 
   interface Props {
     /** Id del canal: fija el color del respaldo. */

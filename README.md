@@ -1,7 +1,28 @@
 # Mosaico
 
 Galería masonry virtual de los videos, shorts y directos de un canal de YouTube.
-Svelte 5 + Vite + TypeScript. Consume [`channel-feed-api`](../channel-feed-api).
+Svelte 5 + SvelteKit 3 (SPA estática con `adapter-static`) + Vite+ + TypeScript.
+Consume [`channel-feed-api`](../channel-feed-api).
+
+## Estructura
+
+```
+src/
+  app.html            plantilla HTML (íconos, tema guardado, manifest)
+  app.css             estilos globales
+  routes/
+    +layout.ts        ssr = false: es una SPA, todo se pinta en el navegador
+    +layout.svelte    importa app.css y escribe title/description/Open Graph
+    +page.svelte      la aplicación (antes App.svelte)
+  lib/
+    components/       componentes Svelte (ControlBar, MasonryGrid, MediaCard, ...)
+    *.ts              lógica sin Svelte (api, urlState, channelSearch, titleSearch, ...)
+    types.ts          tipos compartidos
+static/               favicon, íconos, og-image, robots, manifest y _headers
+tests/                pruebas (vitest vía Vite+)
+```
+
+Los módulos de `src/lib` se importan con el alias `#lib/...` (definido en `package.json`).
 
 ## Desarrollo
 
@@ -9,11 +30,14 @@ Svelte 5 + Vite + TypeScript. Consume [`channel-feed-api`](../channel-feed-api).
 pnpm install
 pnpm dev          # http://localhost:5173 (necesita el backend en 127.0.0.1:3000)
 pnpm test
-pnpm typecheck
-pnpm build        # genera dist/
+pnpm check        # svelte-check (tipos)
+pnpm build        # genera build/
+pnpm preview      # sirve build/ localmente
 ```
 
-En desarrollo el frontend llama a `/api/...` y el proxy de Vite reenvía al backend local
+También funcionan los comandos de Vite+ directos: `vp install`, `vp dev`, `vp build`.
+
+En desarrollo el frontend llama a `/api/...` y el proxy de `vite.config.ts` reenvía al backend local
 (`BACKEND_URL=http://127.0.0.1:4000 pnpm dev` para otro destino). Sin backend real, usa
 `tools/dev-fake.ts` (se copia a `channel-feed-api/test/`, donde ya están `fakeYoutube.ts` y
 `fakeSearch.ts`; instrucciones dentro del archivo). Ahí cualquier texto devuelve 47 canales de prueba;
@@ -70,14 +94,14 @@ necesitan dos cosas: `VITE_API_URL` aquí y `CORS_ORIGINS` en el backend.
    |------------------------|--------------|
    | Framework preset       | None         |
    | Build command          | `pnpm build` |
-   | Build output directory | `dist`       |
+   | Build output directory | `build`      |
 
 4. **Environment variables** (Production, y Preview si lo usas):
 
    | Variable         | Valor                                        | Para qué |
    |------------------|----------------------------------------------|----------|
    | `PNPM_VERSION`   | `12.15.0`                                    | Pages trae pnpm 10 por defecto; el lockfile se generó con 12 |
-   | `NODE_VERSION`   | `22` (ya está en `.node-version`)            | Vite 8 exige Node >= 20.19 |
+   | `NODE_VERSION`   | `22` (ya está en `.node-version`)            | SvelteKit 3 / Vite+ exigen una versión reciente de Node |
    | `VITE_API_URL`   | `https://TU-API.onrender.com` (sin `/` final) | Dónde está el backend |
    | `VITE_SITE_URL`  | `https://TU-SITIO.pages.dev` (opcional)      | `canonical` e imagen al compartir enlaces |
 
@@ -91,10 +115,12 @@ la consola del navegador aparece un error de CORS.
 
 - Nombre del sitio: `src/lib/site.ts` (`SITE_NAME`). El título de la pestaña se actualiza con el
   canal que estés viendo (`@canal · Mosaico`).
-- `index.html` tiene el `<title>`, la descripción y las etiquetas Open Graph / Twitter: si cambias
-  el nombre, cámbialo también ahí y en `public/site.webmanifest`.
-- Íconos e imagen para compartir en `public/` (`favicon.svg`, `apple-touch-icon.png`, `icon-*.png`,
-  `og-image.png` 1200x630). `public/_headers` define cabeceras de seguridad y caché de Pages.
+- `src/routes/+layout.svelte` tiene el `<title>`, la descripción y las etiquetas Open Graph / Twitter
+  (`canonical` y `og:image` solo se escriben si `VITE_SITE_URL` está definida). Si cambias el nombre,
+  cámbialo también en `src/app.html` (`application-name`) y en `static/site.webmanifest`.
+- Íconos e imagen para compartir en `static/` (`favicon.svg`, `apple-touch-icon.png`, `icon-*.png`,
+  `og-image.png` 1200x630). `static/_headers` define cabeceras de seguridad y caché de Pages
+  (los archivos con hash viven en `/_app/immutable/`).
 
 ## Aviso
 

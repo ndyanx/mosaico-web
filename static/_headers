@@ -5,7 +5,7 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
 
 # Archivos con hash en el nombre: cache de por vida.
-/assets/*
+/_app/immutable/*
   Cache-Control: public, max-age=31536000, immutable
 
 # Iconos e imagen para compartir: un dia.

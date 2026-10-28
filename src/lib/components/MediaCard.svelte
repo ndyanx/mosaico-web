@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ChannelEntry } from "../types.ts";
-  import { createHoverPreview, type PreviewState } from "../lib/hoverPreview.ts";
-  import { isPlainClick } from "../lib/embed.ts";
+  import { createHoverPreview, type PreviewState } from "../hoverPreview.ts";
+  import { isPlainClick } from "../embed.ts";
 
   interface Props {
     entry: ChannelEntry;

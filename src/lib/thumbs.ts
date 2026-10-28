@@ -1,5 +1,5 @@
 // Normalización de items de la API -> ChannelEntry, y cálculo del alto de card.
-import type { ChannelEntry, ChannelItem, ImageSource, Section } from "../types.ts";
+import type { ChannelEntry, ChannelItem, ImageSource, Section } from "./types.ts";
 
 /** Aspecto fijo (ancho / alto) cuando `cover` no trae dimensiones. */
 const FALLBACK_ASPECT: Record<Section, number> = {

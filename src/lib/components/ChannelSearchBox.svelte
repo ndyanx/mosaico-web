@@ -1,6 +1,6 @@
 <script lang="ts">
   import ChannelAvatar from "./ChannelAvatar.svelte";
-  import { MIN_SEARCH_CHARS } from "../lib/api.ts";
+  import { MIN_SEARCH_CHARS } from "../api.ts";
   import {
     avatarUrl,
     channelValueOf,
@@ -9,8 +9,8 @@
     formatSubscribers,
     looksLikeChannel,
     type SuggestState,
-  } from "../lib/channelSearch.ts";
-  import type { RecentChannel } from "../lib/recentChannels.ts";
+  } from "../channelSearch.ts";
+  import type { RecentChannel } from "../recentChannels.ts";
   import type { ChannelHit } from "../types.ts";
 
   interface Props {

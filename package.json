@@ -3,24 +3,35 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Mosaico: galería masonry virtual de videos, shorts y directos de un canal de YouTube",
-  "engines": {
-    "node": "^22.18.0 || ^24.11.0 || >=26.0.0"
+  "imports": {
+    "#lib": "./src/lib/index.js",
+    "#lib/*": "./src/lib/*"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "typecheck": "svelte-check --tsconfig ./tsconfig.json",
+    "dev": "vp dev",
+    "build": "vp build",
+    "preview": "vp preview",
+    "prepare": "svelte-kit sync || echo ''",
+    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "test": "vp test run"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@sveltejs/vite-plugin-svelte": "7.3.1",
-    "svelte": "5.57.2",
-    "svelte-check": "4.7.7",
-    "typescript": "6.0.3",
-    "vite": "8.3.5"
+    "@sveltejs/adapter-static": "^4.0.0",
+    "@sveltejs/kit": "^3.0.0",
+    "@sveltejs/vite-plugin-svelte": "^7.2.0",
+    "svelte": "^5.57.1",
+    "svelte-check": "^4.6.0",
+    "typescript": "^6.0.3",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@12.15.0"
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.15.0",
+      "onFail": "download"
+    }
+  },
+  "description": "Mosaico: galería masonry virtual de videos, shorts y directos de un canal de YouTube"
 }

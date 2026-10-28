@@ -1,6 +1,6 @@
 <script lang="ts">
   import ChannelAvatar from "./ChannelAvatar.svelte";
-  import { avatarUrl, formatSubscribers, type FinderState } from "../lib/channelSearch.ts";
+  import { avatarUrl, formatSubscribers, type FinderState } from "../channelSearch.ts";
   import type { ChannelHit } from "../types.ts";
 
   interface Props {

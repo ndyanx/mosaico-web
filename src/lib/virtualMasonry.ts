@@ -6,7 +6,7 @@ import type {
   MasonryState,
   VirtualMasonryOptions,
   MediaEntry,
-} from "../types.ts";
+} from "./types.ts";
 
 const DEFAULT_BREAKPOINTS: Record<number, number> = {
   480: 2,

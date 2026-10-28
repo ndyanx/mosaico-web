@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { ChannelEntry } from "../types.ts";
-  import { embedUrl } from "../lib/embed.ts";
+  import { embedUrl } from "../embed.ts";
 
   interface Props {
     entry: ChannelEntry;

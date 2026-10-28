@@ -1,14 +1,14 @@
 <script lang="ts">
   import { untrack } from "svelte";
-  import MasonryGrid from "./components/MasonryGrid.svelte";
-  import PlayerModal from "./components/PlayerModal.svelte";
-  import { canEmbed } from "./lib/embed.ts";
-  import ControlBar from "./components/ControlBar.svelte";
-  import ChannelResults from "./components/ChannelResults.svelte";
-  import ChannelAvatar from "./components/ChannelAvatar.svelte";
-  import { createChannelList, type ListState } from "./lib/channelList.ts";
-  import { MAX_FIND_LENGTH, normalizeQuery, parseFind, parseListQuery, parseTitleFilter, sameQuery, toSearch } from "./lib/urlState.ts";
-  import { channelValueOf, cleanQuery, createFinder, type FinderState } from "./lib/channelSearch.ts";
+  import MasonryGrid from "#lib/components/MasonryGrid.svelte";
+  import PlayerModal from "#lib/components/PlayerModal.svelte";
+  import { canEmbed } from "#lib/embed.ts";
+  import ControlBar from "#lib/components/ControlBar.svelte";
+  import ChannelResults from "#lib/components/ChannelResults.svelte";
+  import ChannelAvatar from "#lib/components/ChannelAvatar.svelte";
+  import { createChannelList, type ListState } from "#lib/channelList.ts";
+  import { MAX_FIND_LENGTH, normalizeQuery, parseFind, parseListQuery, parseTitleFilter, sameQuery, toSearch } from "#lib/urlState.ts";
+  import { channelValueOf, cleanQuery, createFinder, type FinderState } from "#lib/channelSearch.ts";
   import {
     addRecent,
     loadRecents,
@@ -17,12 +17,12 @@
     removeRecent,
     saveRecents,
     type RecentChannel,
-  } from "./lib/recentChannels.ts";
-  import { filterByTitle, titleTerms } from "./lib/titleSearch.ts";
-  import { columnsFor } from "./lib/layout.ts";
-  import { titleFor } from "./lib/site.ts";
-  import { applyTheme, clampCols, loadPrefs, nextTheme, savePrefs, type Theme } from "./lib/prefs.ts";
-  import type { ChannelEntry, ChannelHit, ListQuery } from "./types.ts";
+  } from "#lib/recentChannels.ts";
+  import { filterByTitle, titleTerms } from "#lib/titleSearch.ts";
+  import { columnsFor } from "#lib/layout.ts";
+  import { titleFor } from "#lib/site.ts";
+  import { applyTheme, clampCols, loadPrefs, nextTheme, savePrefs, type Theme } from "#lib/prefs.ts";
+  import type { ChannelEntry, ChannelHit, ListQuery } from "#lib/types.ts";
 
   // La consulta vive en la URL (?channel=@handle&section=shorts&sort_by=&members=) y la edita la ControlBar.
   let query = $state<ListQuery>(parseListQuery(location.search));

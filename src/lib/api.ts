@@ -1,5 +1,5 @@
 // Cliente tipado de GET /v1/channel (una página para el masonry).
-import type { ApiErrorBody, ApiIssue, ChannelPage, ChannelSearchPage, ListQuery } from "../types.ts";
+import type { ApiErrorBody, ApiIssue, ChannelPage, ChannelSearchPage, ListQuery } from "./types.ts";
 
 /**
  * Base de la API.

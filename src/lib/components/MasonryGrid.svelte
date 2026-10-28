@@ -1,8 +1,8 @@
 <script lang="ts">
   import { untrack, type Snippet } from "svelte";
-  import { createVirtualMasonry } from "../lib/virtualMasonry.ts";
-  import { getItemHeight } from "../lib/thumbs.ts";
-  import { columnBreakpoints } from "../lib/layout.ts";
+  import { createVirtualMasonry } from "../virtualMasonry.ts";
+  import { getItemHeight } from "../thumbs.ts";
+  import { columnBreakpoints } from "../layout.ts";
   import MediaCard from "./MediaCard.svelte";
   import type { ChannelEntry, LayoutItem, MasonryState } from "../types.ts";
 
